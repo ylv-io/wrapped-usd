@@ -4,16 +4,23 @@ import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "openzeppelin-contracts/access/AccessControl.sol";
 import "openzeppelin-contracts/token/ERC20/extensions/ERC20FlashMint.sol";
+import 'openzeppelin-contracts/token/ERC20/IERC20.sol';
+import 'openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol';
 
-contract WrappedUSD is ERC20, ERC20Burnable, AccessControl, ERC20FlashMint {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+contract WrappedUSD is ERC20, AccessControl, ERC20FlashMint {
+    using SafeERC20 for IERC20;
 
     constructor() ERC20("Wrapped USD", "WUSD") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, msg.sender);
     }
 
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-        _mint(to, amount);
+    function mint(address _coin, uint256 _amountIn) public {
+        IERC20(_coin).safeTransferFrom(msg.sender, address(this), _amountIn);
+        _mint(msg.sender, _amountIn);
+    }
+
+    function burn(address _coin, uint256 _amountIn) public {
+        _burn(msg.sender, _amountIn);
+        IERC20(_coin).safeTransfer(msg.sender, _amountIn);
     }
 }
