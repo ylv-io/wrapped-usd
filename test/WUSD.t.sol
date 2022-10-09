@@ -5,9 +5,13 @@ import "openzeppelin-contracts/mocks/ERC20Mock.sol";
 import 'openzeppelin-contracts/token/ERC20/IERC20.sol';
 
 import "forge-std/Test.sol";
+
 import "../src/wusd.sol";
+import '../src/PreciseMath.sol';
 
 contract WrappedUSDTest is Test {
+    using PreciseMath for uint256;
+
     WrappedUSD public wusd;
     IERC20 public dai;
 
@@ -42,8 +46,25 @@ contract WrappedUSDTest is Test {
 
         wusd.mint(address(dai), AMOUNT);
 
-        assertEq(wusd.coinLimits(address(dai)), 0);
+        assertEq(wusd.limits(address(dai)), 0);
         assertEq(wusd.balanceOf(alice), AMOUNT);
+        assertEq(dai.balanceOf(alice), 0);
+
+        vm.stopPrank();
+    }
+
+    function testMintFee() public {
+        uint256 toMint = AMOUNT * 9 / 10;
+        wusd.addLimit(address(dai), toMint);
+        wusd.setMintFee(address(dai), 1e17);
+        vm.startPrank(alice);
+
+        dai.approve(address(wusd), ~uint256(0));
+
+        wusd.mint(address(dai), AMOUNT);
+
+        assertEq(wusd.limits(address(dai)), 0);
+        assertEq(wusd.balanceOf(alice), toMint);
         assertEq(dai.balanceOf(alice), 0);
 
         vm.stopPrank();
@@ -58,12 +79,12 @@ contract WrappedUSDTest is Test {
         wusd.mint(address(dai), AMOUNT);
         assertEq(wusd.balanceOf(alice), AMOUNT);
         assertEq(dai.balanceOf(alice), 0);
-        assertEq(wusd.coinLimits(address(dai)), 0);
+        assertEq(wusd.limits(address(dai)), 0);
 
         wusd.burn(address(dai), AMOUNT);
         assertEq(wusd.balanceOf(alice), 0);
         assertEq(dai.balanceOf(alice), AMOUNT);
-        assertEq(wusd.coinLimits(address(dai)), AMOUNT);
+        assertEq(wusd.limits(address(dai)), AMOUNT);
 
         vm.stopPrank();
     }
