@@ -20,6 +20,7 @@ contract WrappedUSD is ERC20, AccessControl, ERC20FlashMint {
     event Mint(address indexed to, address indexed coin, uint256 value);
     event Burn(address indexed from, address indexed coin, uint256 value);
 
+    address[] coins;
     mapping(address => uint256) public limits;
     mapping(address => uint256) public mintFees;
     mapping(address => uint256) public burnFees;
@@ -29,8 +30,12 @@ contract WrappedUSD is ERC20, AccessControl, ERC20FlashMint {
         _grantRole(GOVERNANCE_ROLE, msg.sender);
     }
 
+    function getCoins() external view returns(address[] memory) {
+        return coins;
+    }
+
     // TODO: support decimal conversions
-    function mint(address _coin, uint256 _amount) public {
+    function mint(address _coin, uint256 _amount) external {
         uint256 mintAmount = _amount.preciseMul(1e18 - mintFees[_coin]);
         if(mintAmount > limits[_coin]) {
             revert NoLimit(limits[_coin]);
@@ -44,7 +49,7 @@ contract WrappedUSD is ERC20, AccessControl, ERC20FlashMint {
     }
 
     // TODO: support decimal conversions
-    function burn(address _coin, uint256 _amount) public {
+    function burn(address _coin, uint256 _amount) external {
         uint256 sendAmount = _amount.preciseMul(1e18 - burnFees[_coin]);
         _burn(msg.sender, _amount);
         IERC20(_coin).safeTransfer(msg.sender, sendAmount);
@@ -53,19 +58,19 @@ contract WrappedUSD is ERC20, AccessControl, ERC20FlashMint {
         emit Burn(msg.sender, _coin, _amount);
     }
 
-    function addLimit(address _coin, uint256 _amount) public onlyRole(GOVERNANCE_ROLE) {
+    function addLimit(address _coin, uint256 _amount) external onlyRole(GOVERNANCE_ROLE) {
         limits[_coin] += _amount;
     }
 
-    function removeLimit(address _coin, uint256 _amount) public onlyRole(GOVERNANCE_ROLE) {
+    function removeLimit(address _coin, uint256 _amount) external onlyRole(GOVERNANCE_ROLE) {
         limits[_coin] -= _amount;
     }
 
-    function setMintFee(address _coin, uint256 _fee) public onlyRole(GOVERNANCE_ROLE) {
+    function setMintFee(address _coin, uint256 _fee) external onlyRole(GOVERNANCE_ROLE) {
         mintFees[_coin] = _fee;
     }
 
-    function setBurnFee(address _coin, uint256 _fee) public onlyRole(GOVERNANCE_ROLE) {
+    function setBurnFee(address _coin, uint256 _fee) external onlyRole(GOVERNANCE_ROLE) {
         burnFees[_coin] = _fee;
     }
 }
