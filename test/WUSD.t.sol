@@ -49,6 +49,7 @@ contract WrappedUSDTest is Test {
         assertEq(wusd.limits(address(dai)), 0);
         assertEq(wusd.balanceOf(alice), AMOUNT);
         assertEq(dai.balanceOf(alice), 0);
+        assertEq(dai.balanceOf(address(wusd)), AMOUNT);
 
         vm.stopPrank();
     }
