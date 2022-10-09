@@ -54,8 +54,8 @@ contract WrappedUSDTest is Test {
     }
 
     function testMintFee() public {
-        uint256 toMint = AMOUNT * 9 / 10;
-        wusd.addLimit(address(dai), toMint);
+        uint256 mintAmount = AMOUNT * 9 / 10;
+        wusd.addLimit(address(dai), mintAmount);
         wusd.setMintFee(address(dai), 1e17);
         vm.startPrank(alice);
 
@@ -64,7 +64,7 @@ contract WrappedUSDTest is Test {
         wusd.mint(address(dai), AMOUNT);
 
         assertEq(wusd.limits(address(dai)), 0);
-        assertEq(wusd.balanceOf(alice), toMint);
+        assertEq(wusd.balanceOf(alice), mintAmount);
         assertEq(dai.balanceOf(alice), 0);
 
         vm.stopPrank();
@@ -84,6 +84,27 @@ contract WrappedUSDTest is Test {
         wusd.burn(address(dai), AMOUNT);
         assertEq(wusd.balanceOf(alice), 0);
         assertEq(dai.balanceOf(alice), AMOUNT);
+        assertEq(wusd.limits(address(dai)), AMOUNT);
+
+        vm.stopPrank();
+    }
+
+    function testBurnFee() public {
+        uint256 sendAmount = AMOUNT * 9 / 10;
+        wusd.addLimit(address(dai), AMOUNT);
+        wusd.setBurnFee(address(dai), 1e17);
+        vm.startPrank(alice);
+
+        dai.approve(address(wusd), ~uint256(0));
+
+        wusd.mint(address(dai), AMOUNT);
+        assertEq(wusd.balanceOf(alice), AMOUNT);
+        assertEq(dai.balanceOf(alice), 0);
+        assertEq(wusd.limits(address(dai)), 0);
+
+        wusd.burn(address(dai), AMOUNT);
+        assertEq(wusd.balanceOf(alice), 0);
+        assertEq(dai.balanceOf(alice), sendAmount);
         assertEq(wusd.limits(address(dai)), AMOUNT);
 
         vm.stopPrank();

@@ -31,22 +31,23 @@ contract WrappedUSD is ERC20, AccessControl, ERC20FlashMint {
 
     // TODO: support decimal conversions
     function mint(address _coin, uint256 _amount) public {
-        uint256 toMint = _amount.preciseMul(1e18 - mintFees[_coin]);
-        if(toMint > limits[_coin]) {
+        uint256 mintAmount = _amount.preciseMul(1e18 - mintFees[_coin]);
+        if(mintAmount > limits[_coin]) {
             revert NoLimit(limits[_coin]);
         }
 
         IERC20(_coin).safeTransferFrom(msg.sender, address(this), _amount);
-        _mint(msg.sender, toMint);
-        limits[_coin] -= toMint;
+        _mint(msg.sender, mintAmount);
+        limits[_coin] -= mintAmount;
 
-        emit Mint(msg.sender, _coin, toMint);
+        emit Mint(msg.sender, _coin, mintAmount);
     }
 
     // TODO: support decimal conversions
     function burn(address _coin, uint256 _amount) public {
+        uint256 sendAmount = _amount.preciseMul(1e18 - burnFees[_coin]);
         _burn(msg.sender, _amount);
-        IERC20(_coin).safeTransfer(msg.sender, _amount.preciseMul(1e18 - mintFees[_coin]));
+        IERC20(_coin).safeTransfer(msg.sender, sendAmount);
         limits[_coin] += _amount;
 
         emit Burn(msg.sender, _coin, _amount);
