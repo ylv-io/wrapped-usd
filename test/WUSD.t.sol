@@ -39,6 +39,7 @@ contract WrappedUSDTest is Test {
     }
 
     function testMint() public {
+        wusd.addCoin(address(dai));
         wusd.addLimit(address(dai), AMOUNT);
         vm.startPrank(alice);
 
@@ -55,6 +56,7 @@ contract WrappedUSDTest is Test {
     }
 
     function testMintFee() public {
+        wusd.addCoin(address(dai));
         uint256 mintAmount = AMOUNT * 9 / 10;
         wusd.addLimit(address(dai), mintAmount);
         wusd.setMintFee(address(dai), 1e17);
@@ -72,6 +74,7 @@ contract WrappedUSDTest is Test {
     }
 
     function testBurn() public {
+        wusd.addCoin(address(dai));
         wusd.addLimit(address(dai), AMOUNT);
         vm.startPrank(alice);
 
@@ -91,6 +94,7 @@ contract WrappedUSDTest is Test {
     }
 
     function testBurnFee() public {
+        wusd.addCoin(address(dai));
         uint256 sendAmount = AMOUNT * 9 / 10;
         wusd.addLimit(address(dai), AMOUNT);
         wusd.setBurnFee(address(dai), 1e17);
