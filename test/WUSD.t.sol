@@ -11,7 +11,7 @@ contract WrappedUSDTest is Test {
     WrappedUSD public wusd;
     IERC20 public dai;
 
-    uint256 constant AMOUNT_IN = 1000 * 1e18;
+    uint256 constant AMOUNT = 1000 * 1e18;
 
     uint256 internal alicePk = 0xa11ce;
     uint256 internal bobPk = 0xb0b;
@@ -24,7 +24,7 @@ contract WrappedUSDTest is Test {
         vm.label(bob, "bob");
 
         wusd = new WrappedUSD();
-        dai = new ERC20Mock('DAI', 'DAI', alice, AMOUNT_IN);
+        dai = new ERC20Mock('DAI', 'DAI', alice, AMOUNT);
     }
 
     function testInit() public {
@@ -35,30 +35,35 @@ contract WrappedUSDTest is Test {
     }
 
     function testMint() public {
+        wusd.addLimit(address(dai), AMOUNT);
         vm.startPrank(alice);
 
         dai.approve(address(wusd), ~uint256(0));
 
-        wusd.mint(address(dai), AMOUNT_IN);
+        wusd.mint(address(dai), AMOUNT);
 
-        assertEq(wusd.balanceOf(alice), AMOUNT_IN);
+        assertEq(wusd.coinLimits(address(dai)), 0);
+        assertEq(wusd.balanceOf(alice), AMOUNT);
         assertEq(dai.balanceOf(alice), 0);
 
         vm.stopPrank();
     }
 
     function testBurn() public {
+        wusd.addLimit(address(dai), AMOUNT);
         vm.startPrank(alice);
 
         dai.approve(address(wusd), ~uint256(0));
 
-        wusd.mint(address(dai), AMOUNT_IN);
-        assertEq(wusd.balanceOf(alice), AMOUNT_IN);
+        wusd.mint(address(dai), AMOUNT);
+        assertEq(wusd.balanceOf(alice), AMOUNT);
         assertEq(dai.balanceOf(alice), 0);
+        assertEq(wusd.coinLimits(address(dai)), 0);
 
-        wusd.burn(address(dai), AMOUNT_IN);
+        wusd.burn(address(dai), AMOUNT);
         assertEq(wusd.balanceOf(alice), 0);
-        assertEq(dai.balanceOf(alice), AMOUNT_IN);
+        assertEq(dai.balanceOf(alice), AMOUNT);
+        assertEq(wusd.coinLimits(address(dai)), AMOUNT);
 
         vm.stopPrank();
     }
