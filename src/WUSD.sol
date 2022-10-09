@@ -47,4 +47,8 @@ contract WrappedUSD is ERC20, AccessControl, ERC20FlashMint {
     function addLimit(address _coin, uint256 _amount) public onlyRole(GOVERNANCE_ROLE) {
         coinLimits[_coin] += _amount;
     }
+
+    function removeLimit(address _coin, uint256 _amount) public onlyRole(GOVERNANCE_ROLE) {
+        coinLimits[_coin] -= _amount;
+    }
 }
